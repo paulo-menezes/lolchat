@@ -1,0 +1,19 @@
+.loginCard {
+  width: 400px;
+  height: 290px;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  margin-top: -145px;
+  margin-left: -200px;
+}
+
+.friendsList {
+  background-color: rgb(38, 38, 38);
+  width: 400px;
+  height: 91.5vh;
+}
+
+.friendItem {
+  cursor: pointer;
+}

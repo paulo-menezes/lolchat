@@ -1,0 +1,1 @@
+To execute de application, you may run the following command: `npm run start-prod`

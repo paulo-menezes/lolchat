@@ -39,17 +39,15 @@ db.once('open', () => {
     httpServer: server
   });
   
+  const connections = [];
+
   webSocketServer.on('request', function(request) {
     var connection = request.accept('lolchat-prot', request.origin);
+    connections.push(connection);
   
-    connection.on('message', function(message) {
-      console.log('Received Message: ' + message.utf8Data);
-      new Message(JSON.parse(message.utf8Data)).save();
-      connection.sendUTF(message.utf8Data);
-    });
-  
-    connection.on('close', function(reasonCode, description) {
-      console.log((new Date()) + ' Peer ' + connection.remoteAddress + ' disconnected.');
+    connection.on('message', async function(message) {
+      const msg = await new Message(JSON.parse(message.utf8Data)).save();
+      connections.forEach(conn => conn.send(JSON.stringify(msg)));
     });
   });
 });
