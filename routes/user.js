@@ -40,7 +40,7 @@ module.exports = app => {
       const user = {};
       user.nickname = document.nickname;
       user.friends = [];
-      user.messages = messages;
+      user.messages = messages || [];
 
       res.status(200).send(user);
     } catch (err) {
@@ -67,7 +67,7 @@ module.exports = app => {
       const user = {};
       user.nickname = document.nickname;
       user.friends = [];
-      user.messages = messages;
+      user.messages = messages || [];
 
       res.status(200).send(user);
     } catch (err) {
@@ -95,8 +95,8 @@ module.exports = app => {
       });
       const user = {};
       user.nickname = document.nickname;
-      user.friends = document.friends;
-      user.messages = messages;
+      user.friends = document.friends || [];
+      user.messages = messages || [];
       res.status(200).send(user);
     } catch (err) {
       console.error(err);
