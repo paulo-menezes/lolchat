@@ -56,16 +56,27 @@ export default class App extends Component {
         this.setState({ passwordError: user.error, loginProgress: false });
       }
     } else {
-      user.friends = [...(user.friends || []), ...(user.messages || [])
-          .filter(msg => msg.from != user.nickname && !(user.friends || []).includes(msg.from))
-          .map(msg => msg.from)];
-      const webSocket = new WebSocket(`ws://localhost:${process.env.PORT || 3000}`, 'lolchat-prot');
+      const friends = (user.messages || []).map(msg => {
+        if (msg.from === user.nickname) {
+          return msg.to;
+        } else {
+          return msg.from;
+        }
+      }).reverse();
+      friends.forEach(o => {
+        if (!user.friends.includes(o)) {
+          user.friends.push(o);
+        }
+      });
+      
+      const webSocket = new WebSocket(
+          `ws://localhost:${process.env.PORT || 3000}`, 'lolchat-prot');
       webSocket.onmessage = (message) => {
         const msg = JSON.parse(message.data);
-        if (msg.from === this.state.user.nickname || msg.to === this.state.user.nickname) {
+        if (msg.from === this.state.user.nickname ||
+            msg.to === this.state.user.nickname) {
           const index = this.state.user.friends
               .indexOf(msg.from === this.state.user.nickname ? msg.to : msg.from);
-          
           let friend = '';
           if (index < 0) {
             friend = msg.from === this.state.user.nickname ? msg.to : msg.from
@@ -73,7 +84,10 @@ export default class App extends Component {
             friend = this.state.user.friends.splice(index, 1)[0];
           }
           this.state.user.friends.unshift(friend);
-          this.setState({ user: this.state.user, messages: [...this.state.messages, JSON.parse(message.data)] });
+          this.setState({
+            user: this.state.user,
+            messages: [...this.state.messages, JSON.parse(message.data)]
+          });
           this.chatBottom.scrollIntoView({ behavior: "smooth" });
         }
       };
@@ -107,7 +121,8 @@ export default class App extends Component {
   }
 
   getLatestMessage(friend) {
-    const messages = this.state.messages.filter(msg => msg.from === friend || msg.to === friend);
+    const messages = this.state.messages.
+        filter(msg => msg.from === friend || msg.to === friend);
     if (messages.length > 0) {
       const message = messages.reverse()[0];
       return (
@@ -121,8 +136,17 @@ export default class App extends Component {
 
   drawMessage(i, message) {
     return (
-      <div key={i} style={{width: '100%', display: 'flex', flexDirection: message.from === this.state.user.nickname ? 'row-reverse' : 'row'}}>
-        <Paper style={{margin: '10px', padding: '10px', width: 'fit-content'}}>
+      <div key={i} style={{
+          width: '100%',
+          display: 'flex',
+          flexDirection: message.from === this.state.user.nickname ? 'row-reverse' : 'row'
+      }}>
+        <Paper style={{
+            margin: '10px',
+            padding: '10px',
+            width: 'fit-content',
+            backgroundColor: message.from === this.state.user.nickname ? '' : 'cadetblue'
+        }}>
           <Typography>{message.text}</Typography>
         </Paper>
       </div>
@@ -207,7 +231,7 @@ export default class App extends Component {
                 <List className={classes.friendsList}>
                   { this.state.user.friends.map(friend => (
                       <div key={friend} onClick={() => this.setState({ selectedFriend: friend })}>
-                        <ListItem className={classes.friendItem}>
+                        <ListItem className={classes.friendItem} style={{backgroundColor: friend === this.state.selectedFriend ? 'cornflowerblue' : ''}}>
                           <ListItemAvatar>
                             <Avatar>
                               {friend.charAt(0).toUpperCase()}

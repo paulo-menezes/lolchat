@@ -39,7 +39,7 @@ module.exports = app => {
 
       const user = {};
       user.nickname = document.nickname;
-      user.friends = document.friends;
+      user.friends = [];
       user.messages = messages;
 
       res.status(200).send(user);
@@ -53,10 +53,21 @@ module.exports = app => {
     try {
       const document = await new User(req.body).save();
 
+      const messages = await Message.find({
+        $or: [
+          {
+            from: req.body.nickname,
+          },
+          {
+            to: req.body.nickname
+          }
+        ]
+      });
+
       const user = {};
       user.nickname = document.nickname;
       user.friends = [];
-      user.messages = [];
+      user.messages = messages;
 
       res.status(200).send(user);
     } catch (err) {
@@ -72,6 +83,17 @@ module.exports = app => {
     try {
       const document =
           await User.updateOne({ nickname: req.body.nickname }, req.body);
+      const messages = await Message.find({
+        $or: [
+          {
+            from: req.body.nickname,
+          },
+          {
+            to: req.body.nickname
+          }
+        ]
+      });
+      const user = {};
       user.nickname = document.nickname;
       user.friends = document.friends;
       user.messages = messages;
