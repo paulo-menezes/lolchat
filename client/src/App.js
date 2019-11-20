@@ -1,5 +1,4 @@
 import React, { Component } from 'react';
-import logo from './logo.svg';
 import classes from './App.module.css';
 import { Card, CardContent, TextField, Fab, Typography, Button, CardActions,
     createMuiTheme, LinearProgress, List, ListItem, ListItemAvatar, Avatar,
@@ -7,7 +6,7 @@ import { Card, CardContent, TextField, Fab, Typography, Button, CardActions,
 import SendIcon from '@material-ui/icons/Send';
 import { ThemeProvider } from '@material-ui/styles';
 
-const PROXY = `http://localhost:${process.env.PORT || 3000}`;
+const PROXY = `http://localhost:3000`;
 
 export default class App extends Component {
 
@@ -56,21 +55,21 @@ export default class App extends Component {
         this.setState({ passwordError: user.error, loginProgress: false });
       }
     } else {
-      const friends = (user.messages || []).map(msg => {
-        if (msg.from === user.nickname) {
-          return msg.to;
-        } else {
+      user.friends = [...new Set((user.messages || []).map(msg => {
+        if (msg.from !== user.nickname) {
           return msg.from;
+        } else {
+          return msg.to;
         }
-      }).reverse();
-      friends.forEach(o => {
-        if (!user.friends.includes(o)) {
-          user.friends.push(o);
-        }
-      });
+      }).reverse())];
+      // friends.forEach(o => {
+      //   if (!user.friends.includes(o)) {
+      //     user.friends.push(o);
+      //   }
+      // });
       
       const webSocket = new WebSocket(
-          `ws://localhost:${process.env.PORT || 3000}`, 'lolchat-prot');
+          `ws://localhost:3000`, 'lolchat-prot');
       webSocket.onmessage = (message) => {
         const msg = JSON.parse(message.data);
         if (msg.from === this.state.user.nickname ||
@@ -108,21 +107,20 @@ export default class App extends Component {
   async addFriend() {
     if (this.state.newFriend) {
       this.state.user.friends.unshift(this.state.newFriend);
-      const response = await fetch(`${PROXY}/user/add_friend`, {
+      await fetch(`${PROXY}/user/add_friend`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(this.state.user)
       });
-      const user = await response.json();
       this.setState({ selectedFriend: this.state.newFriend, newFriend: '' });
     }
   }
 
   getLatestMessage(friend) {
-    const messages = this.state.messages.
-        filter(msg => msg.from === friend || msg.to === friend);
+    const messages = this.state.messages
+        .filter(msg => msg.from === friend || msg.to === friend);
     if (messages.length > 0) {
       const message = messages.reverse()[0];
       return (
