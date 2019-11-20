@@ -173,7 +173,7 @@ export default class App extends Component {
                     margin="normal"
                     variant="filled"
                     disabled={this.state.loginProgress}
-                    error={this.state.nicknameError}
+                    error={!!this.state.nicknameError}
                     helperText={this.state.nicknameError}
                     onChange={(event) => this.setState({ user: { nickname: event.target.value, password: this.state.user.password } })}
                     onKeyDown={(event) => event.key === 'Enter' && this.state.user.nickname
@@ -186,7 +186,7 @@ export default class App extends Component {
                     variant="filled"
                     type="password"
                     disabled={this.state.loginProgress}
-                    error={this.state.passwordError}
+                    error={!!this.state.passwordError}
                     helperText={this.state.passwordError}
                     onChange={(event) => this.setState({ user: { nickname: this.state.user.nickname, password: event.target.value } })}
                     onKeyDown={(event) => event.key === 'Enter' && this.state.user.nickname
