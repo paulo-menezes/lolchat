@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+const cookieParser = require('cookie-parser');
 const path = require('path');
 const mongoose = require('mongoose');
 const WebSocketServer = require('websocket').server;
@@ -10,12 +11,15 @@ const app = express();
 const port = config.PORT;
 
 app.use(cors());
+app.use(cookieParser());
 app.use(bodyParser.json());
+app.use('/api', ensureContentType);
 
 if (!process.env.DEBUG) {
-  app.use(express.static(path.join(__dirname, '/client/build')))
+  const staticPath = path.join(__dirname, '/client/build');
+  app.use(express.static(staticPath));
   app.get('/', function(req, res) {
-    res.sendFile(path.join(__dirname, '/client/build', 'index.html'));
+    res.sendFile(path.join(staticPath, 'index.html'));
   });
 }
 
@@ -32,7 +36,6 @@ const db = mongoose.connection;
 db.once('open', () => {
   console.log('Connection to database estabilished');
   require('./routes/user')(app);
-  require('./routes/messages')(app);
   const Message = require('./models/messages');
 
   const webSocketServer = new WebSocketServer({
@@ -53,3 +56,11 @@ db.once('open', () => {
 });
 
 db.once('error', (err) => console.error('Connection error:', err));
+
+function ensureContentType(req, res, next) {
+  if (!req.is('application/json')) {
+    res.status(400).send('Expects Content-Type to be application/json');
+  } else {
+    next();
+  }
+}

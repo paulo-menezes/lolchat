@@ -1,28 +1,44 @@
 const User = require('../models/user');
 const Message = require('../models/messages');
+const jwt = require('jsonwebtoken');
+
+function generateToken(req, res, next) {
+  jwt.sign({ user: 'paulomc' }, 'lolchat-secret', (err, encoded) => {
+    if (err) { res.sendStatus(403); }
+    req.token = encoded;
+    next();
+  });
+}
+
+function verifyToken(req, res, next) {
+  const bearer = req.headers['authorization'];
+  if (bearer) {
+    const bearerToken = bearer.split(' ')[1];
+    jwt.verify(bearerToken, 'lolchat-secret', (err, decoded) => {
+      if (err) { res.sendStatus(403); }
+      console.log(decoded);
+      next();
+    });
+  } else {
+    res.sendStatus(403);
+  }
+}
 
 module.exports = app => {
-  app.use('/user', (req, res, next) => {
-    if (!req.is('application/json')) {
-      res.status(400).send({ error: 'Expects Content-Type to be application/json' });
-    } else {
-      next();
-    }
-  });
-
-  app.get('/users', async (req, res) => {
-    const users = await User.find();
-    res.status(200).send(users);
-  });
-
-  app.post('/user/signin', async (req, res) => {
+  app.post('/api/user/signin', async (req, res) => {
     try {
+      if (req.body.token) {
+        jwt.verify(req.body.token, 'l0lch4t-s3cr3t', (err, decoded) => {
+          if (err) { res.sendStatus(403); }
+          Object.assign(req.body, decoded);
+        });
+      }
       let document = await User.findOne({ nickname: req.body.nickname });
       if (!document) {
         throw new Error('User does not exist.');
       }
 
-      if (document.password != req.body.password) {
+      if (!req.body.token && document.password != req.body.password) {
         throw new Error('Password does not match.');
       }
 
@@ -39,17 +55,21 @@ module.exports = app => {
 
       const user = {};
       user.nickname = document.nickname;
-      user.friends = [];
-      user.messages = messages || [];
 
-      res.status(200).send(user);
+      jwt.sign(user, 'l0lch4t-s3cr3t', (err, encoded) => {
+        if (err) { res.sendStatus(403); }
+        user.token = encoded;
+        user.friends = [];
+        user.messages = messages || [];
+        res.status(200).send(user);
+      });
     } catch (err) {
       console.error(err);
       res.status(400).send({ error: err.message });
     }
   });
 
-  app.post('/user/signup', async (req, res) => {
+  app.post('/api/user/signup', async (req, res) => {
     try {
       const document = await new User(req.body).save();
 
@@ -66,10 +86,14 @@ module.exports = app => {
 
       const user = {};
       user.nickname = document.nickname;
-      user.friends = [];
-      user.messages = messages || [];
-
-      res.status(200).send(user);
+      
+      jwt.sign(user, 'lolchat-secret', (err, encoded) => {
+        if (err) { res.sendStatus(403); }
+        user.token = encoded;
+        user.friends = [];
+        user.messages = messages || [];
+        res.status(200).send(user);
+      });
     } catch (err) {
       if (err.name === 'MongoError' && err.code === 11000) {
         err.message = 'Nickname already taken. Please, try another one.';
@@ -79,7 +103,7 @@ module.exports = app => {
     }
   });
 
-  app.put('/user/add_friend', async (req, res) => {
+  app.put('/api/user/add_friend', async (req, res) => {
     try {
       const document =
           await User.updateOne({ nickname: req.body.nickname }, req.body);

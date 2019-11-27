@@ -34,19 +34,26 @@ export default class App extends Component {
     newFriend: ''
   };
 
-  async signInOrSignUp(operation) {
+  async signInOrSignUp(operation, token) {
     this.setState(
         { loginProgress: true, nicknameError: null, passwordError: null });
-    const response = await fetch(`${PROXY}/user/${operation}`, {
+    const response = await fetch(`${PROXY}/api/user/${operation}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         nickname: this.state.user.nickname,
-        password: this.state.user.password
+        password: this.state.user.password,
+        token: token,
       })
     });
+
+    if (response.status === 403) {
+      this.setState({ loginProgress: false });
+      return;
+    }
+
     const user = await response.json();
     if (user.error) {
       if (user.error.includes('User')) {
@@ -55,6 +62,7 @@ export default class App extends Component {
         this.setState({ passwordError: user.error, loginProgress: false });
       }
     } else {
+      document.cookie = `lolchat=${user.token}`;
       user.friends = [...new Set((user.messages || []).map(msg => {
         if (msg.from !== user.nickname) {
           return msg.from;
@@ -102,7 +110,7 @@ export default class App extends Component {
   async addFriend() {
     if (this.state.newFriend) {
       this.state.user.friends.unshift(this.state.newFriend);
-      await fetch(`${PROXY}/user/add_friend`, {
+      await fetch(`${PROXY}/api/user/add_friend`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -154,6 +162,14 @@ export default class App extends Component {
     }));
 
     this.setState({ messageText: '' });
+  }
+
+  componentDidMount() {
+    const userToken = document.cookie
+        .replace(/(?:(?:^|.*;\s*)lolchat\s*=\s*([^;]*).*$)|^.*$/, "$1")
+    if (userToken) {
+      this.signInOrSignUp('signin', userToken);
+    }
   }
 
   render() {
