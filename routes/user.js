@@ -2,28 +2,6 @@ const User = require('../models/user');
 const Message = require('../models/messages');
 const jwt = require('jsonwebtoken');
 
-function generateToken(req, res, next) {
-  jwt.sign({ user: 'paulomc' }, 'lolchat-secret', (err, encoded) => {
-    if (err) { res.sendStatus(403); }
-    req.token = encoded;
-    next();
-  });
-}
-
-function verifyToken(req, res, next) {
-  const bearer = req.headers['authorization'];
-  if (bearer) {
-    const bearerToken = bearer.split(' ')[1];
-    jwt.verify(bearerToken, 'lolchat-secret', (err, decoded) => {
-      if (err) { res.sendStatus(403); }
-      console.log(decoded);
-      next();
-    });
-  } else {
-    res.sendStatus(403);
-  }
-}
-
 module.exports = app => {
   app.post('/api/user/signin', async (req, res) => {
     try {
