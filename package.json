@@ -13,9 +13,9 @@
     "websocket": "^1.0.30"
   },
   "scripts": {
-    "start": "npm i && cd client && npm run build && cd .. && node server.js", 
+    "start": "node server.js", 
     "prod": "npm i && cd client && npm run build && cd .. && node server.js",
-    "preinstall": "cd client && npm i"
+    "preinstall": "cd client && npm i && npm run build"
   },
   "devDependencies": {
     "nodemon": "^1.19.4"
