@@ -71,27 +71,23 @@ export default class App extends Component {
         }
       }).reverse())];
       
-      const webSocket = new WebSocket(
-          'ws://localhost:3000', 'lolchat-prot');
+      const webSocket = new WebSocket('ws://localhost:3000', 'lolchat-prot');
       webSocket.onmessage = (message) => {
         const msg = JSON.parse(message.data);
-        if (msg.from === this.state.user.nickname ||
-            msg.to === this.state.user.nickname) {
-          const index = this.state.user.friends
-              .indexOf(msg.from === this.state.user.nickname ? msg.to : msg.from);
-          let friend = '';
-          if (index < 0) {
-            friend = msg.from === this.state.user.nickname ? msg.to : msg.from
-          } else {
-            friend = this.state.user.friends.splice(index, 1)[0];
-          }
-          this.state.user.friends.unshift(friend);
-          this.setState({
-            user: this.state.user,
-            messages: [...this.state.messages, JSON.parse(message.data)]
-          });
-          this.chatBottom.scrollIntoView({ behavior: "smooth" });
+        const index = this.state.user.friends
+            .indexOf(msg.from === this.state.user.nickname ? msg.to : msg.from);
+        let friend = '';
+        if (index < 0) {
+          friend = msg.from === this.state.user.nickname ? msg.to : msg.from
+        } else {
+          friend = this.state.user.friends.splice(index, 1)[0];
         }
+        this.state.user.friends.unshift(friend);
+        this.setState({
+          user: this.state.user,
+          messages: [...this.state.messages, JSON.parse(message.data)]
+        });
+        this.chatBottom.scrollIntoView({ behavior: "smooth" });
       };
 
       this.setState({
@@ -239,7 +235,10 @@ export default class App extends Component {
               <div style={{display: 'flex', flexDirection: 'row'}}>
                 <List className={classes.friendsList}>
                   { this.state.user.friends.map(friend => (
-                      <div key={friend} onClick={() => this.setState({ selectedFriend: friend })}>
+                      <div key={friend} onClick={() => {
+                        this.setState({ selectedFriend: friend });
+                        this.chatBottom.scrollIntoView({ behavior: "smooth" });
+                      }}>
                         <ListItem className={classes.friendItem} style={{backgroundColor: friend === this.state.selectedFriend ? 'cornflowerblue' : ''}}>
                           <ListItemAvatar>
                             <Avatar>

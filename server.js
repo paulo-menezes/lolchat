@@ -6,6 +6,7 @@ const path = require('path');
 const mongoose = require('mongoose');
 const WebSocketServer = require('websocket').server;
 const config = require('./config');
+const jwt = require('jsonwebtoken');
 
 const app = express();
 const port = config.PORT;
@@ -39,18 +40,30 @@ db.once('open', () => {
   const Message = require('./models/messages');
 
   const webSocketServer = new WebSocketServer({
-    httpServer: server
+    httpServer: server,
+    autoAcceptConnections: false,
   });
   
-  const connections = [];
+  const connections = {};
 
   webSocketServer.on('request', function(request) {
     var connection = request.accept('lolchat-prot', request.origin);
-    connections.push(connection);
+    const userToken = request.cookies
+        .find(cookie => cookie.name === 'lolchat').value;
+    jwt.verify(userToken, 'l0lch4t-s3cr3t', (err, decoded) => {
+      if (err) { throw err };
+      const { nickname } = decoded;
+      connections[nickname] = connection;
   
-    connection.on('message', async function(message) {
-      const msg = await new Message(JSON.parse(message.utf8Data)).save();
-      connections.forEach(conn => conn.send(JSON.stringify(msg)));
+      connection.on('message', async function(message) {
+        const msg = await new Message(JSON.parse(message.utf8Data)).save();
+        const stringfiedMsg = JSON.stringify(msg);
+        const recipientConnection = connections[msg.to];
+        if (recipientConnection) {
+          connections[msg.to].send(stringfiedMsg);
+        }
+        connection.send(stringfiedMsg);
+      });
     });
   });
 });
