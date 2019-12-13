@@ -13,6 +13,7 @@
     "websocket": "^1.0.30"
   },
   "scripts": {
+    "start": "npm i && cd client && npm run build && cd .. && node server.js", 
     "prod": "npm i && cd client && npm run build && cd .. && node server.js",
     "preinstall": "cd client && npm i"
   },
