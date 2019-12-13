@@ -49,7 +49,7 @@ db.once('open', () => {
   webSocketServer.on('request', function(request) {
     var connection = request.accept('lolchat-prot', request.origin);
     const userToken = request.cookies
-        .find(cookie => cookie.name === 'lolchat').value;
+        .find(cookie => cookie.name === 'lolchat').value; 
     jwt.verify(userToken, 'l0lch4t-s3cr3t', (err, decoded) => {
       if (err) { throw err };
       const { nickname } = decoded;
