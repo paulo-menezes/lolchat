@@ -6,7 +6,7 @@ import { Card, CardContent, TextField, Fab, Typography, Button, CardActions,
 import SendIcon from '@material-ui/icons/Send';
 import { ThemeProvider } from '@material-ui/styles';
 
-const PROXY = 'http://localhost:3000';
+const PROXY = 'https://lolch4t.herokuapp.com';
 
 export default class App extends Component {
 
@@ -71,7 +71,7 @@ export default class App extends Component {
         }
       }).reverse())];
       
-      const webSocket = new WebSocket('ws://localhost:3000', 'lolchat-prot');
+      const webSocket = new WebSocket('ws://lolch4t.herokuapp.com', 'lolchat-prot');
       webSocket.onmessage = (message) => {
         const msg = JSON.parse(message.data);
         const index = this.state.user.friends
