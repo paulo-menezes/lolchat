@@ -71,7 +71,7 @@ export default class App extends Component {
         }
       }).reverse())];
       
-      const webSocket = new WebSocket('ws://lolch4t.herokuapp.com', 'lolchat-prot');
+      const webSocket = new WebSocket('wss://lolch4t.herokuapp.com', 'lolchat-prot');
       webSocket.onmessage = (message) => {
         const msg = JSON.parse(message.data);
         const index = this.state.user.friends
